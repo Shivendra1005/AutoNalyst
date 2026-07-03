@@ -1,4 +1,12 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from "react";
+
+import {
+    Upload,
+    FileCode2,
+    Cpu,
+    Sparkles,
+    FolderOpen,
+} from "lucide-react";
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 
@@ -172,23 +180,53 @@ function CodeAnalysis() {
                 <div className="card">
                     <div className="card-body">
                         <div
-                            className={`upload-zone ${isDragging ? 'dragging' : ''}`}
+                            className={`upload-zone premium-upload ${isDragging ? "dragging" : ""}`}
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <svg className="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <p className="upload-text">
-                                <strong>Click to upload</strong> or drag and drop
+
+                            <div className="upload-circle">
+
+                                <Upload size={42} />
+
+                            </div>
+
+                            <h2>Drop your project here</h2>
+
+                            <p>
+                                Upload source code for AI-powered security,
+                                bug detection and optimization.
                             </p>
-                            <p className="upload-hint">
-                                Supports .js, .py, .html, .css, .ts, .java, .c, .cpp, .go, .rb, .php and more
-                            </p>
+
+                            <div className="upload-tags">
+
+                                <span>
+                                    <FileCode2 size={15} />
+                                    20+ Languages
+                                </span>
+
+                                <span>
+                                    <Cpu size={15} />
+                                    Ollama
+                                </span>
+
+                                <span>
+                                    <Sparkles size={15} />
+                                    AI Analysis
+                                </span>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                className="btn btn-primary btn-lg"
+                            >
+                                <FolderOpen size={18} />
+                                Browse Files
+                            </button>
+
                         </div>
                         <input
                             ref={fileInputRef}
@@ -320,63 +358,130 @@ function CodeAnalysis() {
                     <div className="code-container">
                         {/* Original Code */}
                         <div className="code-panel">
+
                             <div className="code-panel-header">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14,2 14,8 20,8"></polyline>
-                                </svg>
-                                Original Code
+
+                                <div className="editor-controls">
+                                    <span className="dot red"></span>
+                                    <span className="dot yellow"></span>
+                                    <span className="dot green"></span>
+                                </div>
+
+                                <div className="editor-title">
+                                    📄 {uploadedData.fileName}
+                                </div>
+
+                                <div className="editor-language">
+                                    {uploadedData.language}
+                                </div>
+
                             </div>
+
                             <div className="code-panel-body">
+
                                 <pre className="code-block">
-                                    {uploadedData.chunks[selectedChunk]?.code || 'No code to display'}
+                                    {uploadedData.chunks[selectedChunk]?.code || "No code to display"}
                                 </pre>
+
                             </div>
+
                         </div>
 
                         {/* Analysis Results */}
+                        {/* Analysis Results */}
+
                         <div className="code-panel">
+
                             <div className="code-panel-header">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22,4 12,14.01 9,11.01"></polyline>
-                                </svg>
-                                Analysis Results
-                            </div>
-                            <div className="code-panel-body">
-                                {isAnalyzing ? (
-                                    <div className="loading-overlay">
-                                        <div className="loading-spinner"></div>
-                                        <p className="loading-text">Analyzing code with AI...</p>
-                                    </div>
-                                ) : analysisResult ? (
-                                    <div className="markdown-content">
-                                        <ReactMarkdown>{analysisResult.analysis}</ReactMarkdown>
-                                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
-                                            <small style={{ color: 'var(--text-muted)' }}>
-                                                Analyzed with {analysisResult.model} at {new Date(analysisResult.timestamp).toLocaleString()}
-                                            </small>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="empty-state">
-                                        <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <circle cx="11" cy="11" r="8"></circle>
-                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                        </svg>
-                                        <h3 className="empty-state-title">No Analysis Yet</h3>
-                                        <p className="empty-state-desc">
-                                            Click "Analyze Code" to get AI-powered insights about errors, security issues, and optimizations.
-                                        </p>
+
+                                <div className="editor-controls">
+                                    <span className="dot red"></span>
+                                    <span className="dot yellow"></span>
+                                    <span className="dot green"></span>
+                                </div>
+
+                                <div className="editor-title">
+                                    🤖 AI Security Report
+                                </div>
+
+                                {analysisResult && (
+                                    <div className="editor-language">
+                                        {analysisResult.model}
                                     </div>
                                 )}
+
                             </div>
+
+                            <div className="code-panel-body">
+
+                                {isAnalyzing ? (
+
+                                    <div className="loading-overlay">
+                                        <div className="loading-spinner"></div>
+                                        <p className="loading-text">
+                                            Analyzing code with AI...
+                                        </p>
+                                    </div>
+
+                                ) : analysisResult ? (
+
+                                    <div className="markdown-content">
+
+                                        <ReactMarkdown>
+                                            {analysisResult.analysis}
+                                        </ReactMarkdown>
+
+                                        <div
+                                            style={{
+                                                marginTop: "20px",
+                                                paddingTop: "20px",
+                                                borderTop: "1px solid var(--border-color)"
+                                            }}
+                                        >
+                                            <small style={{ color: "var(--text-muted)" }}>
+                                                Analyzed with {analysisResult.model} at{" "}
+                                                {new Date(
+                                                    analysisResult.timestamp
+                                                ).toLocaleString()}
+                                            </small>
+                                        </div>
+
+                                    </div>
+
+                                ) : (
+
+                                    <div className="empty-state">
+
+                                        <svg
+                                            className="empty-state-icon"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.5"
+                                        >
+                                            <circle cx="11" cy="11" r="8" />
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                        </svg>
+
+                                        <h3>No Analysis Yet</h3>
+
+                                        <p>
+                                            Click <b>Analyze Code</b> to generate an AI report.
+                                        </p>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
                         </div>
+
                     </div>
                 </>
             )}
         </div>
-    )
+    );
 }
 
-export default CodeAnalysis
+export default CodeAnalysis;
