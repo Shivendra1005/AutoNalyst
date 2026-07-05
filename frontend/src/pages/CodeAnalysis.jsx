@@ -7,7 +7,7 @@ import {
     Sparkles,
     FolderOpen,
 } from "lucide-react";
-import axios from 'axios'
+import api from "../api"
 import ReactMarkdown from 'react-markdown'
 
 function CodeAnalysis() {
@@ -37,7 +37,7 @@ function CodeAnalysis() {
 
     const fetchOllamaModels = async () => {
         try {
-            const response = await axios.get('/api/ollama-models')
+            const response = await api.get('/api/ollama-models')
             if (response.data.success) {
                 setOllamaModels(response.data.models)
                 if (response.data.models.length > 0) {
@@ -89,7 +89,7 @@ function CodeAnalysis() {
         formData.append('file', selectedFile)
 
         try {
-            const response = await axios.post('/api/upload', formData, {
+            const response = await api.post('/api/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             })
 
@@ -125,13 +125,13 @@ function CodeAnalysis() {
                     return
                 }
 
-                response = await axios.post('/api/analyze-offline', {
+                response = await api.post('/api/analyze-offline', {
                     model: selectedModel,
                     code: chunk.code,
                     chunkInfo
                 })
             } else {
-                response = await axios.post('/api/analyze-online', {
+                response = await api.post('/api/analyze-online', {
                     code: chunk.code,
                     chunkInfo
                 })

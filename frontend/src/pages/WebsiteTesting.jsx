@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 import {
     ShieldCheck,
@@ -32,7 +32,7 @@ function WebsiteTesting() {
         setResults(null);
 
         try {
-            const response = await axios.post("/api/test-website", {
+            const response = await api.post("/api/test-website", {
                 url: url.trim(),
             });
 
@@ -647,8 +647,8 @@ function WebsiteTesting() {
 
                                 <div
                                     className={`security-status ${results.results.robotsTxt.exists
-                                            ? "pass"
-                                            : "warn"
+                                        ? "pass"
+                                        : "warn"
                                         }`}
                                 />
 
@@ -676,8 +676,8 @@ function WebsiteTesting() {
 
                                 <div
                                     className={`security-status ${results.results.sitemapXml.exists
-                                            ? "pass"
-                                            : "warn"
+                                        ? "pass"
+                                        : "warn"
                                         }`}
                                 />
 
@@ -797,8 +797,8 @@ function WebsiteTesting() {
 
                                         <div
                                             className={`security-status ${rec.priority === "high"
-                                                    ? "fail"
-                                                    : "warn"
+                                                ? "fail"
+                                                : "warn"
                                                 }`}
                                         />
 

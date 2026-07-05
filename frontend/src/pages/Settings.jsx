@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from "../api"
 
 function Settings() {
     const [mistralKey, setMistralKey] = useState('')
@@ -13,7 +13,7 @@ function Settings() {
 
     const fetchKeyStatus = async () => {
         try {
-            const response = await axios.get('/api/get-key-status')
+            const response = await api.get('/api/get-key-status')
             setKeyStatus(response.data)
         } catch (err) {
             console.error('Failed to fetch key status:', err)
@@ -32,7 +32,7 @@ function Settings() {
         setMessage(null)
 
         try {
-            const response = await axios.post('/api/save-key', {
+            const response = await api.post('/api/save-key', {
                 provider: 'mistral',
                 apiKey: mistralKey.trim()
             })
@@ -58,7 +58,7 @@ function Settings() {
         setMessage(null)
 
         try {
-            await axios.delete('/api/delete-key/mistral')
+            await api.delete('/api/delete-key/mistral')
             setMessage({ type: 'success', text: 'API key deleted successfully' })
             fetchKeyStatus()
         } catch (err) {
