@@ -3,7 +3,8 @@ const fs = require('fs');
 
 const IGNORED_DIRS = new Set([
     'node_modules', '.git', 'dist', 'build', 'coverage', '.next',
-    '.cache', '.vscode', '.idea', 'target', 'bin', 'obj', 'vendor'
+    '.cache', '.vscode', '.idea', 'target', 'bin', 'obj', 'vendor',
+    '__pycache__', 'venv', '.gradle', '.dart_tool'
 ]);
 
 const BINARY_EXTS = new Set([

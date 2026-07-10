@@ -6,9 +6,11 @@ import {
     Cpu,
     Sparkles,
     FolderOpen,
+    Download,
 } from "lucide-react";
 import api from "../api"
 import ReactMarkdown from 'react-markdown'
+import html2pdf from 'html2pdf.js'
 
 function CodeAnalysis() {
     // File upload state
@@ -28,7 +30,12 @@ function CodeAnalysis() {
     const [analysisResult, setAnalysisResult] = useState(null)
     const [error, setError] = useState(null)
 
+    // Project analysis state
+    const [isAnalyzingProject, setIsAnalyzingProject] = useState(false)
+    const [projectProgress, setProjectProgress] = useState('')
+
     const fileInputRef = useRef(null)
+    const reportContentRef = useRef(null)
 
     // Fetch Ollama models on mount
     useEffect(() => {
@@ -160,6 +167,59 @@ function CodeAnalysis() {
         }
     }
 
+    const handleProjectAnalyze = async () => {
+        if (!uploadedData || uploadedData.chunks.length === 0) {
+            setError('No project data available')
+            return
+        }
+
+        setIsAnalyzingProject(true)
+        setProjectProgress('Analyzing project...')
+        setError(null)
+        setAnalysisResult(null)
+
+        try {
+            const payload = {
+                chunks: uploadedData.chunks,
+                model: selectedModel,
+                mode: activeTab,
+                projectType: uploadedData.projectType,
+                fileName: uploadedData.fileName,
+                totalFiles: uploadedData.totalFiles
+            }
+
+            const response = await api.post('/api/analyze-project', payload, {
+                timeout: 600000
+            })
+
+            if (response.data.success) {
+                setAnalysisResult(response.data)
+            } else {
+                setError(response.data.error || 'Project analysis failed')
+            }
+        } catch (err) {
+            setError(err.response?.data?.error || 'Project analysis failed. Please try again.')
+        } finally {
+            setIsAnalyzingProject(false)
+            setProjectProgress('')
+        }
+    }
+
+    const handleDownloadPDF = () => {
+        const element = document.getElementById('project-report-content')
+        if (!element) return
+
+        const opt = {
+            margin: 0.5,
+            filename: `security-report-${uploadedData?.fileName || 'project'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        }
+
+        html2pdf().set(opt).from(element).save()
+    }
+
     return (
         <div className="page-container">
             <div className="page-header">
@@ -262,8 +322,8 @@ function CodeAnalysis() {
                         </button>
                     </div>
 
-                    {/* Chunk Selector */}
-                    {uploadedData.chunks.length > 1 && (
+                    {/* Chunk Selector - hidden for project ZIPs */}
+                    {!uploadedData.isProject && uploadedData.chunks.length > 1 && (
                         <div className="chunk-selector">
                             {uploadedData.chunks.map((chunk, index) => (
                                 <button
@@ -336,14 +396,14 @@ function CodeAnalysis() {
 
                             <button
                                 className="btn btn-primary btn-lg"
-                                onClick={handleAnalyze}
-                                disabled={isAnalyzing || (activeTab === 'offline' && !selectedModel)}
+                                onClick={uploadedData.isProject ? handleProjectAnalyze : handleAnalyze}
+                                disabled={isAnalyzing || isAnalyzingProject || (activeTab === 'offline' && !selectedModel)}
                                 style={{ width: '100%', marginTop: '16px' }}
                             >
-                                {isAnalyzing ? (
+                                {(isAnalyzing || isAnalyzingProject) ? (
                                     <>
                                         <div className="loading-spinner" style={{ width: '20px', height: '20px' }}></div>
-                                        Analyzing...
+                                        {isAnalyzingProject ? (projectProgress || 'Analyzing project...') : 'Analyzing...'}
                                     </>
                                 ) : (
                                     <>
@@ -351,7 +411,7 @@ function CodeAnalysis() {
                                             <circle cx="11" cy="11" r="8"></circle>
                                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                         </svg>
-                                        Analyze Code
+                                        {uploadedData.isProject ? 'Analyze Project' : 'Analyze Code'}
                                     </>
                                 )}
                             </button>
@@ -359,8 +419,9 @@ function CodeAnalysis() {
                     </div>
 
                     {/* Side-by-Side View */}
-                    <div className="code-container">
-                        {/* Original Code */}
+                    <div className={`code-container ${uploadedData.isProject ? 'project-layout' : ''}`}>
+                        {/* Original Code - hidden for project analysis */}
+                        {!uploadedData.isProject && (
                         <div className="code-panel">
 
                             <div className="code-panel-header">
@@ -372,11 +433,11 @@ function CodeAnalysis() {
                                 </div>
 
                                 <div className="editor-title">
-                                    📄 {uploadedData.isProject ? `${uploadedData.fileName} (${uploadedData.totalFiles} files)` : uploadedData.fileName}
+                                    📄 {uploadedData.fileName}
                                 </div>
 
                                 <div className="editor-language">
-                                    {uploadedData.isProject && uploadedData.projectType ? uploadedData.projectType : uploadedData.language}
+                                    {uploadedData.language}
                                 </div>
 
                             </div>
@@ -390,11 +451,11 @@ function CodeAnalysis() {
                             </div>
 
                         </div>
+                        )}
 
                         {/* Analysis Results */}
-                        {/* Analysis Results */}
 
-                        <div className="code-panel">
+                        <div className={`code-panel ${uploadedData.isProject ? 'full-width' : ''}`}>
 
                             <div className="code-panel-header">
 
@@ -429,7 +490,10 @@ function CodeAnalysis() {
 
                                 ) : analysisResult ? (
 
-                                    <div className="markdown-content">
+                                    <div
+                                        className="markdown-content"
+                                        id={uploadedData?.isProject ? 'project-report-content' : undefined}
+                                    >
 
                                         <ReactMarkdown>
                                             {analysisResult.analysis}
@@ -439,7 +503,12 @@ function CodeAnalysis() {
                                             style={{
                                                 marginTop: "20px",
                                                 paddingTop: "20px",
-                                                borderTop: "1px solid var(--border-color)"
+                                                borderTop: "1px solid var(--border-color)",
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                flexWrap: 'wrap',
+                                                gap: '8px'
                                             }}
                                         >
                                             <small style={{ color: "var(--text-muted)" }}>
@@ -448,6 +517,15 @@ function CodeAnalysis() {
                                                     analysisResult.timestamp
                                                 ).toLocaleString()}
                                             </small>
+                                            {uploadedData?.isProject && (
+                                                <button
+                                                    className="btn btn-primary btn-sm"
+                                                    onClick={handleDownloadPDF}
+                                                >
+                                                    <Download size={14} style={{ marginRight: '6px' }} />
+                                                    Download PDF
+                                                </button>
+                                            )}
                                         </div>
 
                                     </div>
@@ -470,7 +548,7 @@ function CodeAnalysis() {
                                         <h3>No Analysis Yet</h3>
 
                                         <p>
-                                            Click <b>Analyze Code</b> to generate an AI report.
+                                            Click <b>{uploadedData?.isProject ? 'Analyze Project' : 'Analyze Code'}</b> to generate {uploadedData?.isProject ? 'a comprehensive security report' : 'an AI report'}.
                                         </p>
 
                                     </div>

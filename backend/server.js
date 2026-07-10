@@ -8,6 +8,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const analysisRoutes = require('./routes/analysisRoutes');
 const securityRoutes = require('./routes/securityRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const projectRoutes = require('./routes/projectRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +40,7 @@ app.use('/api', uploadRoutes);
 app.use('/api', analysisRoutes);
 app.use('/api', securityRoutes);
 app.use('/api', settingsRoutes);
+app.use('/api', projectRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

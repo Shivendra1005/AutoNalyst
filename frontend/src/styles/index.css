@@ -505,6 +505,14 @@ body {
   margin-top: 24px;
 }
 
+.code-container.project-layout {
+  grid-template-columns: 1fr;
+}
+
+.code-panel.full-width {
+  grid-column: 1 / -1;
+}
+
 .code-panel {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
