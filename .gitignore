@@ -1,23 +1,10 @@
-cat > .gitignore << 'EOF'
-# Dependencies
 node_modules/
-
-# Build outputs
 dist/
 build/
-
-# Environment variables
 .env
 .env.*
-
-# Logs
 *.log
 npm-debug.log*
-
-# Uploaded/generated files
 uploads/
-
-# OS & Editor
 .vscode/
 .DS_Store
-EOF

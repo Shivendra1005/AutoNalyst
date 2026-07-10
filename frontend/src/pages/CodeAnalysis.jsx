@@ -35,7 +35,6 @@ function CodeAnalysis() {
     const [projectProgress, setProjectProgress] = useState('')
 
     const fileInputRef = useRef(null)
-    const reportContentRef = useRef(null)
 
     // Fetch Ollama models on mount
     useEffect(() => {
@@ -44,7 +43,7 @@ function CodeAnalysis() {
 
     const fetchOllamaModels = async () => {
         try {
-            const response = await api.get('/api/ollama-models')
+            const response = await api.get('/ollama-models')
             if (response.data.success) {
                 setOllamaModels(response.data.models)
                 if (response.data.models.length > 0) {
@@ -96,7 +95,7 @@ function CodeAnalysis() {
         formData.append('file', selectedFile)
 
         try {
-            const response = await api.post('/api/upload', formData, {
+            const response = await api.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             })
 
@@ -132,13 +131,13 @@ function CodeAnalysis() {
                     return
                 }
 
-                response = await api.post('/api/analyze-offline', {
+                response = await api.post('/analyze-offline', {
                     model: selectedModel,
                     code: chunk.code,
                     chunkInfo
                 })
             } else {
-                response = await api.post('/api/analyze-online', {
+                response = await api.post('/analyze-online', {
                     code: chunk.code,
                     chunkInfo
                 })
@@ -188,7 +187,7 @@ function CodeAnalysis() {
                 totalFiles: uploadedData.totalFiles
             }
 
-            const response = await api.post('/api/analyze-project', payload, {
+            const response = await api.post('/analyze-project', payload, {
                 timeout: 600000
             })
 
@@ -206,15 +205,21 @@ function CodeAnalysis() {
     }
 
     const handleDownloadPDF = () => {
-        const element = document.getElementById('project-report-content')
+        const element = document.getElementById('report-content')
         if (!element) return
 
         const opt = {
-            margin: 0.5,
-            filename: `security-report-${uploadedData?.fileName || 'project'}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            margin: [0.5, 0.5, 0.75, 0.5],
+            filename: `security-report-${uploadedData?.fileName || 'report'}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                letterRendering: true,
+                logging: false
+            },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         }
 
         html2pdf().set(opt).from(element).save()
@@ -492,7 +497,7 @@ function CodeAnalysis() {
 
                                     <div
                                         className="markdown-content"
-                                        id={uploadedData?.isProject ? 'project-report-content' : undefined}
+                                        id="report-content"
                                     >
 
                                         <ReactMarkdown>
@@ -517,15 +522,13 @@ function CodeAnalysis() {
                                                     analysisResult.timestamp
                                                 ).toLocaleString()}
                                             </small>
-                                            {uploadedData?.isProject && (
-                                                <button
-                                                    className="btn btn-primary btn-sm"
-                                                    onClick={handleDownloadPDF}
-                                                >
-                                                    <Download size={14} style={{ marginRight: '6px' }} />
-                                                    Download PDF
-                                                </button>
-                                            )}
+                                            <button
+                                                className="btn btn-primary btn-sm"
+                                                onClick={handleDownloadPDF}
+                                            >
+                                                <Download size={14} style={{ marginRight: '6px' }} />
+                                                Download PDF
+                                            </button>
                                         </div>
 
                                     </div>

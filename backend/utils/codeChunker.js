@@ -59,7 +59,5 @@ function getChunkInfo(chunk) {
 }
 
 module.exports = {
-    chunkCode,
-    getChunkInfo,
-    CHUNK_SIZE
+    chunkCode
 };

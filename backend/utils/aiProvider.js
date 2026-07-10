@@ -63,4 +63,4 @@ function createProvider(mode) {
     };
 }
 
-module.exports = { createProvider, queryOllama, queryMistral, OLLAMA_BASE_URL, MISTRAL_API_URL };
+module.exports = { createProvider, OLLAMA_BASE_URL };

@@ -32,7 +32,7 @@ function WebsiteTesting() {
         setResults(null);
 
         try {
-            const response = await api.post("/api/test-website", {
+            const response = await api.post("/test-website", {
                 url: url.trim(),
             });
 
