@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { chunkCode } = require('../utils/codeChunker');
+const { processZip } = require('../utils/projectScanner');
 
 const router = express.Router();
 
@@ -19,9 +20,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for ZIPs
     fileFilter: (req, file, cb) => {
-        const allowedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.html', '.css', '.json', '.java', '.c', '.cpp', '.go', '.rb', '.php', '.sql', '.sh', '.yml', '.yaml', '.xml', '.md'];
+        const allowedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.html', '.css', '.json', '.java', '.c', '.cpp', '.go', '.rb', '.php', '.sql', '.sh', '.yml', '.yaml', '.xml', '.md', '.zip'];
         const ext = path.extname(file.originalname).toLowerCase();
         if (allowedExtensions.includes(ext)) {
             cb(null, true);
@@ -31,7 +32,7 @@ const upload = multer({
     }
 });
 
-// Upload file and return chunks
+// Upload file or ZIP project and return chunks
 router.post('/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
@@ -39,11 +40,35 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         }
 
         const filePath = req.file.path;
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
         const fileName = req.file.originalname;
         const ext = path.extname(fileName).toLowerCase();
 
-        // Detect language from extension
+        // Handle ZIP upload - extract, scan, aggregate, then chunk
+        if (ext === '.zip') {
+            const { aggregatedText, totalLines, fileCount, projectType } = await processZip(filePath);
+
+            // Clean up the uploaded zip file
+            fs.unlinkSync(filePath);
+
+            const language = projectType || 'project';
+            const chunks = chunkCode(aggregatedText, fileName, language);
+
+            return res.json({
+                success: true,
+                fileName,
+                language,
+                totalLines,
+                totalFiles: fileCount,
+                projectType,
+                isProject: true,
+                uploadTime: new Date().toISOString(),
+                chunks
+            });
+        }
+
+        // Existing behavior for regular source files
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+
         const languageMap = {
             '.js': 'javascript',
             '.jsx': 'javascript',

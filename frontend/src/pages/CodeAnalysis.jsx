@@ -165,7 +165,7 @@ function CodeAnalysis() {
             <div className="page-header">
                 <h1 className="page-title">Code Analysis</h1>
                 <p className="page-subtitle">
-                    Upload your code files for AI-powered error detection, security analysis, and optimization suggestions.
+                    Upload your code files or entire project (ZIP) for AI-powered error detection, security analysis, and optimization suggestions.
                 </p>
             </div>
 
@@ -196,8 +196,8 @@ function CodeAnalysis() {
                             <h2>Drop your project here</h2>
 
                             <p>
-                                Upload source code for AI-powered security,
-                                bug detection and optimization.
+                                Upload source code files or entire project ZIP
+                                for AI-powered security, bug detection and optimization.
                             </p>
 
                             <div className="upload-tags">
@@ -231,7 +231,7 @@ function CodeAnalysis() {
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".js,.jsx,.ts,.tsx,.py,.html,.css,.json,.java,.c,.cpp,.go,.rb,.php,.sql,.sh,.yml,.yaml,.xml,.md"
+                            accept=".js,.jsx,.ts,.tsx,.py,.html,.css,.json,.java,.c,.cpp,.go,.rb,.php,.sql,.sh,.yml,.yaml,.xml,.md,.zip"
                             onChange={handleFileInputChange}
                             style={{ display: 'none' }}
                         />
@@ -250,7 +250,11 @@ function CodeAnalysis() {
                         <div className="file-info-details">
                             <div className="file-info-name">{uploadedData.fileName}</div>
                             <div className="file-info-meta">
-                                {uploadedData.language} • {uploadedData.totalLines} lines • {uploadedData.chunks.length} chunk(s)
+                                {uploadedData.isProject ? (
+                                    <>{uploadedData.projectType ? `${uploadedData.projectType} • ` : ''}{uploadedData.totalFiles || 0} files • {uploadedData.totalLines} lines • {uploadedData.chunks.length} chunk(s)</>
+                                ) : (
+                                    <>{uploadedData.language} • {uploadedData.totalLines} lines • {uploadedData.chunks.length} chunk(s)</>
+                                )}
                             </div>
                         </div>
                         <button className="btn btn-secondary btn-sm" onClick={clearFile}>
@@ -368,11 +372,11 @@ function CodeAnalysis() {
                                 </div>
 
                                 <div className="editor-title">
-                                    📄 {uploadedData.fileName}
+                                    📄 {uploadedData.isProject ? `${uploadedData.fileName} (${uploadedData.totalFiles} files)` : uploadedData.fileName}
                                 </div>
 
                                 <div className="editor-language">
-                                    {uploadedData.language}
+                                    {uploadedData.isProject && uploadedData.projectType ? uploadedData.projectType : uploadedData.language}
                                 </div>
 
                             </div>
