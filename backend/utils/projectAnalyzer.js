@@ -1,11 +1,6 @@
-const axios = require('axios');
-const path = require('path');
-const fs = require('fs');
+const { createProvider } = require('./aiProvider');
 
-const OLLAMA_BASE_URL = 'http://localhost:11434';
-const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
 const CHUNK_TIMEOUT = 180000;
-
 const SEVERITY_WEIGHTS = { CRITICAL: 10, HIGH: 7, MEDIUM: 4, LOW: 1 };
 
 function buildChunkPrompt(chunkCode, chunkInfo, projectType, totalFiles) {
@@ -77,38 +72,15 @@ function parseFindings(text) {
 async function analyzeChunk(chunk, model, mode, apiKey, projectType, totalFiles) {
     const chunkInfo = `${chunk.metadata.fileName} - Lines ${chunk.startLine}-${chunk.endLine} (chunk ${chunk.chunkIndex + 1} of ${chunk.totalChunks})`;
     const prompt = buildChunkPrompt(chunk.code, chunkInfo, projectType, totalFiles);
-    let responseText;
 
-    if (mode === 'offline') {
-        const response = await axios.post(`${OLLAMA_BASE_URL}/api/generate`, {
-            model,
-            prompt,
-            stream: false
-        }, { timeout: CHUNK_TIMEOUT });
-        responseText = response.data.response;
-    } else {
-        let key = apiKey;
-        if (!key) {
-            const keysPath = path.join(__dirname, '../data/keys.json');
-            if (fs.existsSync(keysPath)) {
-                const keys = JSON.parse(fs.readFileSync(keysPath, 'utf-8'));
-                key = keys.mistral;
-            }
-        }
-        const response = await axios.post(MISTRAL_API_URL, {
-            model: 'mistral-small-latest',
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,
-            max_tokens: 4096
-        }, {
-            headers: {
-                'Authorization': `Bearer ${key}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CHUNK_TIMEOUT
-        });
-        responseText = response.data.choices[0]?.message?.content || '[]';
-    }
+    const provider = createProvider(mode);
+    const responseText = await provider.query(prompt, {
+        model,
+        apiKey,
+        timeout: CHUNK_TIMEOUT,
+        temperature: 0.1,
+        maxTokens: 4096
+    });
 
     return parseFindings(responseText);
 }

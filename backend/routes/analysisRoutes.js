@@ -1,13 +1,10 @@
 const express = require('express');
 const { exec } = require('child_process');
 const axios = require('axios');
-const path = require('path');
-const fs = require('fs');
 
 const router = express.Router();
 
-const OLLAMA_BASE_URL = 'http://localhost:11434';
-const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
+const { createProvider, OLLAMA_BASE_URL } = require('../utils/aiProvider');
 
 // Get available Ollama models
 router.get('/ollama-models', async (req, res) => {
@@ -74,15 +71,12 @@ ${code}
 
 Provide detailed, actionable feedback.`;
 
-        const response = await axios.post(`${OLLAMA_BASE_URL}/api/generate`, {
-            model,
-            prompt,
-            stream: false
-        }, { timeout: 120000 });
+        const provider = createProvider('offline');
+        const analysis = await provider.query(prompt, { model, timeout: 120000 });
 
         res.json({
             success: true,
-            analysis: response.data.response,
+            analysis,
             model,
             timestamp: new Date().toISOString()
         });
@@ -103,26 +97,11 @@ router.post('/analyze-online', async (req, res) => {
     try {
         const { code, chunkInfo, apiKey } = req.body;
 
-        // Get API key from request or stored keys
-        let key = apiKey;
-        if (!key) {
-            const keysPath = path.join(__dirname, '../data/keys.json');
-            if (fs.existsSync(keysPath)) {
-                const keys = JSON.parse(fs.readFileSync(keysPath, 'utf-8'));
-                key = keys.mistral;
-            }
-        }
-
-        if (!key) {
-            return res.status(400).json({
-                error: 'Mistral API key is required. Please add it in Settings.'
-            });
-        }
-
         if (!code) {
             return res.status(400).json({ error: 'Code is required' });
         }
 
+        const provider = createProvider('online');
         const prompt = `You are a code analysis expert. Analyze the following code chunk for:
 1. Syntax errors and bugs
 2. Security vulnerabilities
@@ -143,26 +122,11 @@ ${code}
 
 Provide detailed, actionable feedback.`;
 
-        const response = await axios.post(MISTRAL_API_URL, {
-            model: 'mistral-small-latest',
-            messages: [
-                { role: 'user', content: prompt }
-            ],
-            temperature: 0.3,
-            max_tokens: 4096
-        }, {
-            headers: {
-                'Authorization': `Bearer ${key}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 120000
-        });
-
-        const analysisResult = response.data.choices[0]?.message?.content || 'No analysis returned';
+        const analysis = await provider.query(prompt, { apiKey, timeout: 120000 });
 
         res.json({
             success: true,
-            analysis: analysisResult,
+            analysis,
             model: 'mistral-small-latest',
             timestamp: new Date().toISOString()
         });
@@ -171,6 +135,9 @@ Provide detailed, actionable feedback.`;
         console.error('Mistral analysis error:', error.response?.data || error.message);
         if (error.response?.status === 401) {
             return res.status(401).json({ error: 'Invalid Mistral API key' });
+        }
+        if (error.message && error.message.includes('Mistral API key is required')) {
+            return res.status(400).json({ error: error.message });
         }
         res.status(500).json({ error: error.message });
     }
