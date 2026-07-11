@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../api";
+import html2pdf from 'html2pdf.js'
 
 import {
     ShieldCheck,
@@ -11,6 +12,7 @@ import {
     FileWarning,
     Server,
     Globe2,
+    Download,
 } from "lucide-react";
 
 function WebsiteTesting() {
@@ -50,6 +52,27 @@ function WebsiteTesting() {
             setIsLoading(false);
         }
     };
+
+    const handleDownloadPDF = () => {
+        const element = document.getElementById('website-report-content')
+        if (!element) return
+
+        const opt = {
+            margin: [0.5, 0.5, 0.75, 0.5],
+            filename: `security-report-${url.replace(/https?:\/\//, '').replace(/[^a-z0-9]/gi, '-') || 'website'}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                letterRendering: true,
+                logging: false
+            },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        }
+
+        html2pdf().set(opt).from(element).save()
+    }
 
     const getSeverityClass = (score) => {
         if (score >= 80) return "low";
@@ -185,7 +208,7 @@ function WebsiteTesting() {
 
             {results && (
 
-                <>
+                <div id="website-report-content">
                     {/* Security Score */}
 
                     <div className="security-dashboard">
@@ -828,7 +851,23 @@ function WebsiteTesting() {
 
                     )}
 
-                </>
+                    <div style={{
+                        marginTop: '24px',
+                        padding: '20px',
+                        borderTop: '1px solid var(--border-color)',
+                        display: 'flex',
+                        justifyContent: 'flex-end'
+                    }}>
+                        <button
+                            className="btn btn-primary btn-sm"
+                            onClick={handleDownloadPDF}
+                        >
+                            <Download size={14} style={{ marginRight: '6px' }} />
+                            Download PDF Report
+                        </button>
+                    </div>
+
+                </div>
 
             )}
 
